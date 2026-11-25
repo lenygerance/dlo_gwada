@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dlo Gwada - Carte Initiale</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+
+        body {
+            font-family: sans-serif;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Dlo Gwada : État du réseau</h1>
+    <button id="btn-signaler" style="padding: 10px; margin-bottom: 10px; cursor: pointer;">
+        📍 Signaler une coupure à ma position
+    </button>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialisation de la carte sur la Guadeloupe
+        const map = L.map('map').setView([16.22, -61.53], 10);
+
+        // Images de la carte (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // On va chercher les données
+        fetch('signalements.json')
+            .then(reponse => reponse.json()) // On convertit le fichier en JSON
+            .then(donnees => {
+                // 2. 'donnees' est maintenant ton tableau [{}, {}, {}]
+                donnees.forEach(signalement => {
+                    // 3. On crée un marqueur pour chaque ligne du fichier
+                    L.marker([signalement.lat, signalement.lng])
+                        .addTo(map)
+                        .bindPopup(signalement.message);
+                });
+            })
+            .catch(erreur => console.error("Erreur de chargement :", erreur));
+
+            document.getElementById('btn-signaler').addEventListener('click', () => {
+    // Demande de permission à l'utilisateur pour sa localisation
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const maLat = position.coords.latitude;
+            const maLng = position.coords.longitude;
+
+            // On centre la carte sur l'utilisateur
+            map.setView([maLat, maLng], 14);
+
+            // On ajoute un marqueur spécial (ici, on change juste le texte du popup pour l'instant)
+            L.marker([maLat, maLng])
+                .addTo(map)
+                .bindPopup("<b>Votre signalement</b><br>Merci de votre aide !")
+                .openPopup();
+
+            alert("Position récupérée : " + maLat + ", " + maLng);
+        }, () => {
+            alert("Impossible de récupérer votre position. Vérifiez vos réglages GPS.");
+        });
+    } else {
+        alert("Votre navigateur ne supporte pas la géolocalisation.");
+    }
+});
+    </script>
+</body>
+
+</html>
